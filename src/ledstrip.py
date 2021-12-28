@@ -865,3 +865,35 @@ class LEDStrip(object):
         Emulates a sunset
         """
         return self.run_sequence(self._sunrise_sunset, seconds=seconds, milliseconds=milliseconds, temp_start=temp_start, temp_end=temp_end, setting=False)
+
+
+if __name__ == "__main__":
+    from sys import argv
+    import fileinput
+    from config import CONFIG
+
+    if any(x in argv for x in ["-h", "--help"]):
+        print(
+            f"Usage: {argv[0]} [<input_file>]\n\n"
+            "Change LED colours from values in input_file.\n"
+            "Reads #rrggbb[,duration] from input_file (stdin by default).\n"
+            f"Example: echo '#ffee00,2000' | {argv[0]}"
+        )
+        exit()
+
+    led_strip = LEDStrip(CONFIG)
+
+    for line in fileinput.input():
+        if line.startswith("#"):
+            try:
+                r, g, b = map(lambda value: int(value, 16), (line[1:3], line[3:5], line[5:7]))
+                if len(line) > 8:
+                    duration = int(line[8:])
+                else:
+                    duration = 0
+                led_strip.fade_to_rgb(r, g, b, duration)
+            except ValueError:
+                print(f"Invalid input: {line}", end="")
+        else:
+            print(f"Not an #rrggbb value: {line}", end="")
+
